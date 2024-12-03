@@ -1,3 +1,5 @@
+using FileSearchEngine;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -23,5 +25,10 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+await Model.Initialize();
+
+var resp = Model.SearchFiles("Singapore", 5);
+var articles = Database.GetFiles(resp.ToList());
 
 app.Run();
