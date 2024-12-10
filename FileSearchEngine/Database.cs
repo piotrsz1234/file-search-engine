@@ -10,26 +10,56 @@ public static class Database
     {
         Connection.Open();
         using var cmd = Connection.CreateCommand();
-        cmd.CommandText = @"
-            CREATE TABLE IF NOT EXISTS files (
-                id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL,
-                content TEXT NOT NULL,
-                category TEXT,
-                UNIQUE(name)
-            );
-        ";
+        cmd.CommandText = """
+                          
+                                      CREATE TABLE IF NOT EXISTS files (
+                                          id INTEGER PRIMARY KEY,
+                                          name TEXT NOT NULL,
+                                          content TEXT NOT NULL,
+                                          category TEXT,
+                                          UNIQUE(name)
+                                      );
+                                  
+                          """;
         cmd.ExecuteNonQuery();
     }
     
-    public static void AddFileIfNotExists(string name, string content, string category)
+    public static int AddFileIfNotExists(string name, string content, string category)
     {
         using var cmd = Connection.CreateCommand();
-        cmd.CommandText = "INSERT OR IGNORE INTO files (name, content, category) VALUES (@name, @content, @category);";
+        cmd.CommandText = """
+                          
+                                  INSERT OR IGNORE INTO files (name, content, category)
+                                  VALUES (@name, @content, @category);
+                                  
+                                  SELECT id FROM files WHERE name = @name AND content = @content AND category = @category;
+                          """;
+    
         cmd.Parameters.AddWithValue("@name", name);
         cmd.Parameters.AddWithValue("@content", content);
         cmd.Parameters.AddWithValue("@category", category);
-        cmd.ExecuteNonQuery();
+
+        var result = cmd.ExecuteScalar();
+        return Convert.ToInt32(result);
+    }
+    
+    public static List<Article> GetFiles()
+    {
+        List<Article> files = [];
+        using var cmd = Connection.CreateCommand();
+        cmd.CommandText = "SELECT id, name, content, category FROM files;";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            files.Add(new Article
+            {
+                Id = int.Parse(reader.GetString(0)),
+                Name = reader.GetString(1),
+                Text = reader.GetString(2),
+                Label = reader.GetString(3)
+            });
+        }
+        return files;
     }
     
     public static void DeleteFile(string name)
@@ -40,7 +70,7 @@ public static class Database
         cmd.ExecuteNonQuery();
     }
     
-    public static List<Article> GetFiles(List<string> names)
+    public static List<Article> GetFiles(List<int> names)
     {
         List<Article> files = []; // Correct initialization
         using var cmd = Connection.CreateCommand();
@@ -54,16 +84,17 @@ public static class Database
         }
     
         // Build the query with the dynamically created parameters
-        cmd.CommandText = "SELECT name, content, category FROM files WHERE name IN (" + string.Join(", ", parameters) + ");";
+        cmd.CommandText = "SELECT id, name, content, category FROM files WHERE id IN (" + string.Join(", ", parameters) + ");";
     
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
             files.Add(new Article
             {
-                Name = reader.GetString(0),
-                Text = reader.GetString(1),
-                Label = reader.GetString(2)
+                Id = int.Parse(reader.GetString(0)),
+                Name = reader.GetString(1),
+                Text = reader.GetString(2),
+                Label = reader.GetString(3)
             });
         }
     
@@ -75,7 +106,7 @@ public static class Database
         using var cmd = Connection.CreateCommand();
         cmd.CommandText = "SELECT content FROM files WHERE name = @name;";
         cmd.Parameters.AddWithValue("@name", name);
-        return (string)cmd.ExecuteScalar();
+        return (string)cmd.ExecuteScalar()!;
     }
     
     public static IEnumerable<string> SearchFiles(string query)

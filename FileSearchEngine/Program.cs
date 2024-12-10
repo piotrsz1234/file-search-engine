@@ -28,7 +28,4 @@ app.MapControllerRoute(
 
 await Model.Initialize();
 
-var resp = Model.SearchFiles("Singapore", 5);
-var articles = Database.GetFiles(resp.ToList());
-
 app.Run();

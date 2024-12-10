@@ -16,8 +16,9 @@ public static class FileHelper
                 yield return new Article
                 {
                     Name = file.Split('\\').Last(),
-                    Text = text, 
-                    Label = label
+                    Text = text,
+                    Label = label,
+                    Id = 0
                 };
             }
         }
