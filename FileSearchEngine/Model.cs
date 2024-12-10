@@ -32,6 +32,12 @@ public static class Model
                 var id = Database.AddFileIfNotExists(file.Name, file.Text);
                 file.Id = id;
             }
+            
+            await InitializeNlp();
+            await TrainTfIdf(files);
+            await TrainFastText(files);
+            await GenerateVectorCache();
+            return;
         }
         
         await InitializeNlp();
@@ -75,7 +81,7 @@ public static class Model
         Database.AddFileIfNotExists(fileName, text);
         var files = Database.GetFiles();
         await TrainTfIdf(files);
-        TrainFastText(files);
+        await TrainFastText(files);
         await GenerateVectorCache();
     }
     
@@ -84,7 +90,7 @@ public static class Model
         Database.DeleteFile(fileName);
         var files = Database.GetFiles();
         await TrainTfIdf(files);
-        TrainFastText(files);
+        await TrainFastText(files);
         await GenerateVectorCache();
     }
     
@@ -163,11 +169,11 @@ public static class Model
         }
         catch (Exception)
         {
-            TrainFastText(files);
+            await TrainFastText(files);
         }
     }
     
-    private static void TrainFastText(List<Article> files)
+    private static async Task TrainFastText(List<Article> files)
     {
         _fastText = new FastText(Language.English, 1, "fasttext")
         {
@@ -182,6 +188,7 @@ public static class Model
                 .Select(x => new Document(x.Text, Language.English))
                 .ToList())
             .ToArray());
+        await _fastText.StoreAsync();
     }
 
     private static IEnumerable<string> SanitizeDoc(Document doc)

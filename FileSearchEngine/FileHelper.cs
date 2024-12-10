@@ -9,7 +9,6 @@ public static class FileHelper
         foreach (var directory in directories)
         {
             var files = Directory.GetFiles(directory);
-            var label = Path.GetFileName(directory);
             foreach (var file in files)
             {
                 var text = File.ReadAllText(file);
