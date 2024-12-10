@@ -16,7 +16,6 @@ public static class Database
                                           id INTEGER PRIMARY KEY,
                                           name TEXT NOT NULL,
                                           content TEXT NOT NULL,
-                                          category TEXT,
                                           UNIQUE(name)
                                       );
                                   
@@ -24,20 +23,19 @@ public static class Database
         cmd.ExecuteNonQuery();
     }
     
-    public static int AddFileIfNotExists(string name, string content, string category)
+    public static int AddFileIfNotExists(string name, string content)
     {
         using var cmd = Connection.CreateCommand();
         cmd.CommandText = """
                           
-                                  INSERT OR IGNORE INTO files (name, content, category)
-                                  VALUES (@name, @content, @category);
+                                  INSERT OR IGNORE INTO files (name, content)
+                                  VALUES (@name, @content);
                                   
-                                  SELECT id FROM files WHERE name = @name AND content = @content AND category = @category;
+                                  SELECT id FROM files WHERE name = @name AND content = @content;
                           """;
     
         cmd.Parameters.AddWithValue("@name", name);
         cmd.Parameters.AddWithValue("@content", content);
-        cmd.Parameters.AddWithValue("@category", category);
 
         var result = cmd.ExecuteScalar();
         return Convert.ToInt32(result);
@@ -47,7 +45,7 @@ public static class Database
     {
         List<Article> files = [];
         using var cmd = Connection.CreateCommand();
-        cmd.CommandText = "SELECT id, name, content, category FROM files;";
+        cmd.CommandText = "SELECT id, name, content FROM files;";
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -55,8 +53,7 @@ public static class Database
             {
                 Id = int.Parse(reader.GetString(0)),
                 Name = reader.GetString(1),
-                Text = reader.GetString(2),
-                Label = reader.GetString(3)
+                Text = reader.GetString(2)
             });
         }
         return files;
@@ -84,7 +81,7 @@ public static class Database
         }
     
         // Build the query with the dynamically created parameters
-        cmd.CommandText = "SELECT id, name, content, category FROM files WHERE id IN (" + string.Join(", ", parameters) + ");";
+        cmd.CommandText = "SELECT id, name, content FROM files WHERE id IN (" + string.Join(", ", parameters) + ");";
     
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -93,8 +90,7 @@ public static class Database
             {
                 Id = int.Parse(reader.GetString(0)),
                 Name = reader.GetString(1),
-                Text = reader.GetString(2),
-                Label = reader.GetString(3)
+                Text = reader.GetString(2)
             });
         }
     

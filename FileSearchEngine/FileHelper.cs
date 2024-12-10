@@ -17,7 +17,6 @@ public static class FileHelper
                 {
                     Name = file.Split('\\').Last(),
                     Text = text,
-                    Label = label,
                     Id = 0
                 };
             }
