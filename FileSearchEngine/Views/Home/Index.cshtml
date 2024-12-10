@@ -17,8 +17,9 @@ ViewData["Title"] = "Home Page";
 <script>
     $(document).ready(function () {
         $('#searchButton').click(function () {
-            $('#searchResult').val(null);
-            var searchPhrase = $('#searchPhrase').val();
+            let result = $('#searchResult');
+            result.val(null);
+            let searchPhrase = $('#searchPhrase').val();
             if (searchPhrase.trim() !== "") {
                 // Make the AJAX request to the server
                 $.ajax({
@@ -34,7 +35,7 @@ ViewData["Title"] = "Home Page";
                     }
                 });
             } else {
-                $('#searchResult').val("Please enter a search phrase.");
+                result.val("Please enter a search phrase.");
             }
         });
     });
