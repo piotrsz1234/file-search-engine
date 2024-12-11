@@ -2,43 +2,18 @@
 
 namespace FileSearchEngine.Controllers;
 
-[Route("api/[controller]")]
-[ApiController]
-public class FileController : ControllerBase
+public sealed class FileController : Controller
 {
-    private readonly string _fileDirectory = Path.Combine(Directory.GetCurrentDirectory(), "UploadedFiles");
-
-    public FileController()
+    public IActionResult Index()
     {
-        if (!Directory.Exists(_fileDirectory))
-        {
-            Directory.CreateDirectory(_fileDirectory);
-        }
+        return View();
     }
-
-    // GET: api/File
-    [HttpGet]
-    public IActionResult GetFileList()
+    
+    public IActionResult DeleteFile(string id)
     {
-        var files = Directory.GetFiles(_fileDirectory).Select(Path.GetFileName).ToList();
-        return Ok(files);
-    }
-
-    // DELETE: api/File/{fileName}
-    [HttpDelete("{fileName}")]
-    public IActionResult DeleteFile(string fileName)
-    {
-        var filePath = Path.Combine(_fileDirectory, fileName);
-        if (System.IO.File.Exists(filePath))
-        {
-            System.IO.File.Delete(filePath);
-            return Ok(new { message = "File deleted successfully" });
-        }
         return NotFound(new { message = "File not found" });
     }
-
-    // POST: api/File/upload
-    [HttpPost("upload")]
+    
     public async Task<IActionResult> UploadFile(IFormFile? file)
     {
         if (file == null || file.Length == 0)
@@ -46,11 +21,11 @@ public class FileController : ControllerBase
             return BadRequest(new { message = "No file uploaded" });
         }
 
-        var filePath = Path.Combine(_fileDirectory, file.FileName);
-        await using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
+        // var filePath = Path.Combine(_fileDirectory, file.FileName);
+        // await using (var stream = new FileStream(filePath, FileMode.Create))
+        // {
+        //     await file.CopyToAsync(stream);
+        // }
         return Ok(new { message = "File uploaded successfully" });
     }
 }
