@@ -26,6 +26,15 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+var elasticUsername = app.Configuration.GetValue<string>("ElasticUsername");
+var elasticPassword = app.Configuration.GetValue<string>("ElasticPassword");
+var elasticUrl = app.Configuration.GetValue<string>("ElasticUrl");
+if(elasticUsername == null || elasticPassword == null || elasticUrl == null)
+{
+    throw new Exception("Elastic configuration is missing");
+}
+
+FileSearchEngine.Elastic.Initialize(elasticUsername, elasticPassword, elasticUrl);
 await Model.Initialize();
 
 app.Run();
