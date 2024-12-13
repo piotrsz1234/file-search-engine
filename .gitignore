@@ -41,3 +41,10 @@ bld/
 msbuild.log
 msbuild.err
 msbuild.wrn
+FileSearchEngine/catalyst-models/Models/en/TFIDFModel/v000001/
+
+FileSearchEngine/catalyst-models/Models/en/FastTextData/v000001/
+
+FileSearchEngine/catalyst-models/Data/en/FastTextData-Matrix/v000001/
+
+FileSearchEngine/database.db

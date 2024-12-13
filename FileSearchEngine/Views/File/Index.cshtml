@@ -2,7 +2,7 @@
 <div class="container">
     <h2>File Management</h2>
 
-    <form asp-action="DeleteFile" method="post">
+    <form id="deleteFileForm" method="post">
         <label for="fileList">Select a file to delete:</label>
         <select id="fileList" name="id">
             @foreach (var item in Database.GetFiles())
@@ -16,33 +16,67 @@
     
     <hr>
 
-    <label for="fileUpload">Upload a new file:</label>
-    <input type="file" id="fileUpload"/>
-    <button id="uploadFileBtn">Upload File</button>
+    <form id="addFileForm" method="post" enctype="multipart/form-data">
+        <label for="fileUpload">Upload a new file:</label>
+        <input type="file" id="fileUpload" name="fileUpload" />
+        <button type="submit">Upload File</button>
+    </form>
 </div>
 
 <script>
-    // Handle file upload
-    document.getElementById("uploadFileBtn").addEventListener("click", () => {
-        const fileInput = document.getElementById("fileUpload");
-        const file = fileInput.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('/api/file/upload', {
-                method: 'POST',
-                body: formData
+    function refreshFileList() {
+        fetch('@Url.Action("GetFileList", "File")') // Replace "ControllerName" with your actual controller name
+            .then(response => response.text())
+            .then(data => {
+                // Replace the contents of the select element with the updated list
+                document.getElementById('fileList').innerHTML = data;
             })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    populateFileList(); // Update the dropdown with the new file
-                })
-                .catch(_ => alert('Error uploading file.'));
-        } else {
-            alert("Please select a file to upload.");
-        }
+            .catch(error => {
+                console.error('Error fetching file list:', error);
+            });
+    }
+    
+    document.getElementById('deleteFileForm').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent page redirection
+
+        let formData = new FormData(this); // Get form data
+
+        // Perform an AJAX request
+        fetch('@Url.Action("DeleteFile", "File")', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                refreshFileList();
+                alert(data?.message ?? "No response");
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the file.');
+            });
     });
+    document.getElementById('addFileForm').addEventListener('submit', function (event) {
+        event.preventDefault(); // Prevent page redirection
+
+        let formData = new FormData();
+        formData.append('file', $('#fileUpload')[0].files[0]);
+        
+        // Perform an AJAX request to upload the file
+        fetch('@Url.Action("UploadFile", "File")', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                refreshFileList();
+                alert(data?.message ?? "No response");
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while uploading the file.');
+            });
+    });
+
 </script>
 </body>

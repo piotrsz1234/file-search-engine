@@ -1,4 +1,4 @@
-﻿using Catalyst;
+using Catalyst;
 using Catalyst.Models;
 using Mosaik.Core;
 
@@ -85,13 +85,16 @@ public static class Model
         await GenerateVectorCache();
     }
     
-    public static async Task RemoveFile(string fileName)
+    public static async Task<bool> RemoveFile(int id)
     {
-        Database.DeleteFile(fileName);
+        if(!Database.DeleteFileById(id))
+            return false;
+        
         var files = Database.GetFiles();
         await TrainTfIdf(files);
         await TrainFastText(files);
         await GenerateVectorCache();
+        return true;
     }
     
     private static Task GenerateVectorCache()

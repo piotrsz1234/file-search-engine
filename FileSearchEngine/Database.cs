@@ -67,6 +67,15 @@ public static class Database
         cmd.ExecuteNonQuery();
     }
     
+    public static bool DeleteFileById(int id)
+    {
+        using var cmd = Connection.CreateCommand();
+        cmd.CommandText = "DELETE FROM files WHERE id = @id;";
+        cmd.Parameters.AddWithValue("@id", id);
+        var rowsAffected = cmd.ExecuteNonQuery();
+        return rowsAffected > 0;
+    }
+    
     public static List<Article> GetFiles(List<int> names)
     {
         List<Article> files = []; // Correct initialization
