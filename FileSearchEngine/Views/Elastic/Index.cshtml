@@ -1,0 +1,105 @@
+﻿@{
+ViewData["Title"] = "Elastic search Page";
+}
+
+<div class="search-section">
+    <div class="form-row">
+        <div class="row">
+            <div class="col">
+                <label for="searchPhrase">Enter Search Phrase:</label>
+            </div>
+            <div class="col-1">
+                <label for="resultsCount">Count:</label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <input type="text"
+                       id="searchPhrase"
+                       name="searchPhrase"
+                       class="form-control"
+                       placeholder="Search..."
+                       required>
+            </div>
+            <div class="col-1">
+                <input type="number"
+                       id="resultsCount"
+                       name="resultsCount"
+                       class="form-control"
+                       placeholder="5"
+                       required
+                       min="1"
+                       max="100"
+                       value="5">
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-primary mt-2" id="searchButton">Search</button>
+    <button type="button" class="btn btn-primary mt-2" id="searchButtonKnn">SearchKnn</button>
+
+    <br/>
+    <label for="searchResult">Search Results:</label>
+    <textarea id="searchResult" name="searchResult" class="form-control mt-2" rows="25" readonly></textarea>
+</div>
+
+<!-- JavaScript for AJAX Request -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#searchButton').click(function () {
+            let result = $('#searchResult');
+            result.val(null);
+            let searchPhrase = $('#searchPhrase').val();
+            if (searchPhrase.trim() !== "") {
+                let count = $('#resultsCount').val();
+                let resultCount = parseInt(count, 10);
+                if (resultCount === null || resultCount === -1 || resultCount < 1 || resultCount > 100) {
+                    resultCount = 5;
+                }
+                // Make the AJAX request to the server
+                $.ajax({
+                    url: '@Url.Action("Search", "Elastic")',  // This calls the 'Search' action in the 'Home' controller
+                    type: 'POST',
+                    data: { searchPhrase: searchPhrase, count: resultCount },
+                    success: function (data) {
+                        // When the search is successful, update the result textarea
+                        $('#searchResult').val(data);
+                    },
+                    error: function () {
+                        $('#searchResult').val("An error occurred while searching.");
+                    }
+                });
+            } else {
+                result.val("Please enter a search phrase.");
+            }
+        });
+        $('#searchButtonKnn').click(function () {
+            let result = $('#searchResult');
+            result.val(null);
+            let searchPhrase = $('#searchPhrase').val();
+            if (searchPhrase.trim() !== "") {
+                let count = $('#resultsCount').val();
+                let resultCount = parseInt(count, 10);
+                if (resultCount === null || resultCount === -1 || resultCount < 1 || resultCount > 100) {
+                    resultCount = 5;
+                }
+                // Make the AJAX request to the server
+                $.ajax({
+                    url: '@Url.Action("SearchKnn", "Elastic")',
+                    type: 'POST',
+                    data: { searchPhrase: searchPhrase, count: resultCount },
+                    success: function (data) {
+                        $('#searchResult').val(data);
+                    },
+                    error: function () {
+                        $('#searchResult').val("An error occurred while searching.");
+                    }
+                });
+            } else {
+                result.val("Please enter a search phrase.");
+            }
+        });
+    });
+
+</script>

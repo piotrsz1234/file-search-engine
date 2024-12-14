@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using System.Data;
+using Microsoft.Data.Sqlite;
 
 namespace FileSearchEngine;
 
@@ -16,6 +17,7 @@ public static class Database
                                           id INTEGER PRIMARY KEY,
                                           name TEXT NOT NULL,
                                           content TEXT NOT NULL,
+                                          elastic_id TEXT,
                                           UNIQUE(name)
                                       );
                                   
@@ -45,7 +47,7 @@ public static class Database
     {
         List<Article> files = [];
         using var cmd = Connection.CreateCommand();
-        cmd.CommandText = "SELECT id, name, content FROM files;";
+        cmd.CommandText = "SELECT id, name, content, elastic_id FROM files;";
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -53,18 +55,11 @@ public static class Database
             {
                 Id = int.Parse(reader.GetString(0)),
                 Name = reader.GetString(1),
-                Text = reader.GetString(2)
+                Text = reader.GetString(2),
+                ElasticId = reader.GetString(3)
             });
         }
         return files;
-    }
-    
-    public static void DeleteFile(string name)
-    {
-        using var cmd = Connection.CreateCommand();
-        cmd.CommandText = "DELETE FROM files WHERE name = @name;";
-        cmd.Parameters.AddWithValue("@name", name);
-        cmd.ExecuteNonQuery();
     }
     
     public static bool DeleteFileById(int id)
@@ -74,6 +69,37 @@ public static class Database
         cmd.Parameters.AddWithValue("@id", id);
         var rowsAffected = cmd.ExecuteNonQuery();
         return rowsAffected > 0;
+    }
+    
+    public static void UpdateElasticId(int id, string elasticId)
+    {
+        using var cmd = Connection.CreateCommand();
+        cmd.CommandText = "UPDATE files SET elastic_id = @elasticId WHERE id = @id;";
+        cmd.Parameters.AddWithValue("@elasticId", elasticId);
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.ExecuteNonQuery();
+    }
+    
+    public static string GetElasticId(int id)
+    {
+        try
+        {
+            using var cmd = Connection.CreateCommand();
+            cmd.CommandText = "SELECT elastic_id FROM files WHERE id = @id;";
+            cmd.Parameters.AddWithValue("@id", id);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var test = reader.GetString(0);
+                return test;
+            }
+            
+            return string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
     
     public static List<Article> GetFiles(List<int> names)
@@ -90,7 +116,7 @@ public static class Database
         }
     
         // Build the query with the dynamically created parameters
-        cmd.CommandText = "SELECT id, name, content FROM files WHERE id IN (" + string.Join(", ", parameters) + ");";
+        cmd.CommandText = "SELECT id, name, content, elastic_id FROM files WHERE id IN (" + string.Join(", ", parameters) + ");";
     
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -99,30 +125,11 @@ public static class Database
             {
                 Id = int.Parse(reader.GetString(0)),
                 Name = reader.GetString(1),
-                Text = reader.GetString(2)
+                Text = reader.GetString(2),
+                ElasticId = reader.GetString(3)
             });
         }
     
         return files;
-    }
-    
-    public static string GetFileContent(string name)
-    {
-        using var cmd = Connection.CreateCommand();
-        cmd.CommandText = "SELECT content FROM files WHERE name = @name;";
-        cmd.Parameters.AddWithValue("@name", name);
-        return (string)cmd.ExecuteScalar()!;
-    }
-    
-    public static IEnumerable<string> SearchFiles(string query)
-    {
-        using var cmd = Connection.CreateCommand();
-        cmd.CommandText = "SELECT name FROM files WHERE content LIKE @query;";
-        cmd.Parameters.AddWithValue("@query", $"%{query}%");
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-        {
-            yield return reader.GetString(0);
-        }
     }
 }

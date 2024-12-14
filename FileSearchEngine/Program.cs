@@ -29,12 +29,13 @@ app.MapControllerRoute(
 var elasticUsername = app.Configuration.GetValue<string>("ElasticUsername");
 var elasticPassword = app.Configuration.GetValue<string>("ElasticPassword");
 var elasticUrl = app.Configuration.GetValue<string>("ElasticUrl");
-if(elasticUsername == null || elasticPassword == null || elasticUrl == null)
+var elasticFingerprint = app.Configuration.GetValue<string>("ElasticFingerprint");
+if(elasticUsername == null || elasticPassword == null || elasticUrl == null || elasticFingerprint == null)
 {
     throw new Exception("Elastic configuration is missing");
 }
 
-FileSearchEngine.Elastic.Initialize(elasticUsername, elasticPassword, elasticUrl);
+ElasticDatabase.Initialize(elasticUsername, elasticPassword, elasticUrl, elasticFingerprint);
 await Model.Initialize();
 
 app.Run();

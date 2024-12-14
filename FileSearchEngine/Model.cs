@@ -26,11 +26,17 @@ public static class Model
         var files = Database.GetFiles();
         if(files.Count == 0)
         {
+            await ElasticDatabase.ResetDatabase();
+            await ElasticDatabase.CleanDatabase();
             files = FileHelper.LoadArticles().ToList();
             foreach (var file in files)
             {
                 var id = Database.AddFileIfNotExists(file.Name, file.Text);
                 file.Id = id;
+                var elasticId = await ElasticDatabase.AddFile(file, id);
+                if (elasticId is null) continue;
+                file.ElasticId = elasticId;
+                Database.UpdateElasticId(file.Id, elasticId);
             }
             
             await InitializeNlp();
@@ -46,6 +52,18 @@ public static class Model
         await GenerateVectorCache();
     }
 
+    public static float[] GetVector(string query)
+    {
+        var doc = new Document(query, Language.English);
+        _nlp.ProcessSingle(doc);
+        var tokens = SanitizeDoc(doc);
+        var doc2 = new Document(string.Join(' ', tokens), Language.English);
+        _nlp.ProcessSingle(doc2);
+        _tfidf.Process(doc2);
+    
+        return _fastText.GetVector(doc2.Value, Language.English);
+    }
+    
     public static IEnumerable<int> SearchFiles(string query, int? resultCount = null)
     {
         var doc = new Document(query, Language.English);
@@ -78,7 +96,18 @@ public static class Model
 
     public static async Task AddFile(string fileName, string text)
     {
-        Database.AddFileIfNotExists(fileName, text);
+        var id = Database.AddFileIfNotExists(fileName, text);
+        var elasticId = await ElasticDatabase.AddFile(new Article
+        {
+            Name = fileName,
+            Text = text,
+            Id = id
+        }, id);
+        if (elasticId is not null)
+        {
+            Database.UpdateElasticId(id, elasticId);
+        }
+        
         var files = Database.GetFiles();
         await TrainTfIdf(files);
         await TrainFastText(files);
@@ -87,9 +116,12 @@ public static class Model
     
     public static async Task<bool> RemoveFile(int id)
     {
+        var elasticId = Database.GetElasticId(id);
         if(!Database.DeleteFileById(id))
             return false;
-        
+
+        if(!string.IsNullOrEmpty(elasticId))
+            await ElasticDatabase.DeleteFile(elasticId);
         var files = Database.GetFiles();
         await TrainTfIdf(files);
         await TrainFastText(files);
@@ -97,12 +129,12 @@ public static class Model
         return true;
     }
     
-    private static Task GenerateVectorCache()
+    private static async Task GenerateVectorCache()
     {
         FastTextVectors.Clear();
         var files = Database.GetFiles();
         if (files.Count == 0)
-            return Task.CompletedTask;
+            return;
 
         foreach (var document in files)
         {
@@ -114,9 +146,9 @@ public static class Model
             _tfidf.Process(doc2ToCompare);
             var vector = _fastText.GetVector(doc2ToCompare.Value, Language.English);
             FastTextVectors[document.Id] = vector;
+            document.Vector = vector;
+            await ElasticDatabase.UpdateFile(document);
         }
-
-        return Task.CompletedTask;
     }
     
     private static async Task InitializeNlp()
