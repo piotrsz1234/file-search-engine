@@ -30,12 +30,11 @@ var elasticUsername = app.Configuration.GetValue<string>("ElasticUsername");
 var elasticPassword = app.Configuration.GetValue<string>("ElasticPassword");
 var elasticUrl = app.Configuration.GetValue<string>("ElasticUrl");
 var elasticFingerprint = app.Configuration.GetValue<string>("ElasticFingerprint");
-if(elasticUsername == null || elasticPassword == null || elasticUrl == null || elasticFingerprint == null)
+if(elasticUsername != null && elasticPassword != null && elasticUrl != null && elasticFingerprint != null)
 {
-    throw new Exception("Elastic configuration is missing");
+    ElasticDatabase.Initialize(elasticUsername, elasticPassword, elasticUrl, elasticFingerprint);
 }
 
-ElasticDatabase.Initialize(elasticUsername, elasticPassword, elasticUrl, elasticFingerprint);
 await Model.Initialize();
 
 app.Run();
