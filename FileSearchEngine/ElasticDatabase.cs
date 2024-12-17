@@ -6,12 +6,9 @@ namespace FileSearchEngine;
 
 public static class ElasticDatabase
 {
-    private static ElasticsearchClient Client { get; set; } = null!;
+    private static ElasticsearchClient? Client { get; set; }
     
     private const string ArticleIndex = "article-index";
-
-    // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-    public static bool Initialized => Client != null;
     
     public static void Initialize(string username, string password, string url, string fingerprint)
     {
@@ -24,7 +21,7 @@ public static class ElasticDatabase
     
     public static async Task ResetDatabase()
     {
-        if(!Initialized)
+        if(Client == null)
             return;
         
         var exists = await Client.Indices.ExistsAsync(ArticleIndex);
@@ -47,7 +44,7 @@ public static class ElasticDatabase
 
     public static async Task CleanDatabase()
     {
-        if(!Initialized)
+        if(Client == null)
             return;
         
         await Client.DeleteByQueryAsync<object>(ArticleIndex, x => x
@@ -57,7 +54,7 @@ public static class ElasticDatabase
     
     public static async Task<string?> AddFile(Article article, int databaseId)
     {
-        if(!Initialized)
+        if(Client == null)
             return null;
         
         var indexExistsResponse = await Client.Indices.ExistsAsync(databaseId.ToString());
@@ -70,7 +67,7 @@ public static class ElasticDatabase
     
     public static async Task DeleteFile(string databaseId)
     {
-        if(!Initialized)
+        if(Client == null)
             return;
         
         if(!int.TryParse(databaseId, out var id))
@@ -80,7 +77,7 @@ public static class ElasticDatabase
     
     public static async Task UpdateFile(Article article)
     {
-        if(!Initialized)
+        if(Client == null)
             return;
         
         if(!int.TryParse(article.ElasticId, out var id))
@@ -91,7 +88,7 @@ public static class ElasticDatabase
     
     public static async Task<IEnumerable<Article>> SearchFiles(string query, int? resultCount = null)
     { 
-        if(!Initialized)
+        if(Client == null)
             return [];
         
         var response = await Client.SearchAsync<Article>(s => s 
@@ -111,7 +108,7 @@ public static class ElasticDatabase
 
     public static async Task<IEnumerable<Article>> SearchFilesKnn(string query, int? resultCount = null)
     {
-        if(!Initialized)
+        if(Client == null)
             return [];
         
         var vector = Model.GetVector(query);
