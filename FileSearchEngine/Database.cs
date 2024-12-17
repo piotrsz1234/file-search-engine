@@ -55,7 +55,7 @@ public static class Database
                 Id = int.Parse(reader.GetString(0)),
                 Name = reader.GetString(1),
                 Text = reader.GetString(2),
-                ElasticId = reader.GetString(3)
+                ElasticId = !reader.IsDBNull(3) ? reader.GetString(3) : null
             });
         }
         return files;
@@ -125,7 +125,7 @@ public static class Database
                 Id = int.Parse(reader.GetString(0)),
                 Name = reader.GetString(1),
                 Text = reader.GetString(2),
-                ElasticId = reader.GetString(3)
+                ElasticId = !reader.IsDBNull(3) ? reader.GetString(3) : null
             });
         }
     

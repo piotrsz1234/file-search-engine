@@ -11,7 +11,7 @@ public sealed class Article
     public string? ElasticId { get; set; }
     
     public float[] Vector { get; set; } = null!;
-
+    
     public override string ToString()
     {
         return $"Name: {Name}\n" +

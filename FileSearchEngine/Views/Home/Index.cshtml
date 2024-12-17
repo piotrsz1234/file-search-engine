@@ -36,6 +36,7 @@ ViewData["Title"] = "Home Page";
     </div>
 
     <button type="button" class="btn btn-primary mt-2" id="searchButton">Search</button>
+    <button type="button" class="btn btn-primary mt-2" id="searchButtonStar">Search tfidf</button>
 
     <br/>
     <label for="searchResult">Search Results:</label>
@@ -59,6 +60,36 @@ ViewData["Title"] = "Home Page";
                 // Make the AJAX request to the server
                 $.ajax({
                     url: '@Url.Action("Search", "Home")',  // This calls the 'Search' action in the 'Home' controller
+                    type: 'POST',
+                    data: { searchPhrase: searchPhrase, count: resultCount },
+                    success: function (data) {
+                        // When the search is successful, update the result textarea
+                        $('#searchResult').val(data);
+                    },
+                    error: function () {
+                        $('#searchResult').val("An error occurred while searching.");
+                    }
+                });
+            } else {
+                result.val("Please enter a search phrase.");
+            }
+        });
+    });
+
+    $(document).ready(function () {
+        $('#searchButtonStar').click(function () {
+            let result = $('#searchResult');
+            result.val(null);
+            let searchPhrase = $('#searchPhrase').val();
+            if (searchPhrase.trim() !== "") {
+                let count = $('#resultsCount').val();
+                let resultCount = parseInt(count, 10);
+                if (resultCount === null || resultCount === -1 || resultCount < 1 || resultCount > 100) {
+                    resultCount = 5;
+                }
+                // Make the AJAX request to the server
+                $.ajax({
+                    url: '@Url.Action("SearchTfIdf", "Home")',  // This calls the 'Search' action in the 'Home' controller
                     type: 'POST',
                     data: { searchPhrase: searchPhrase, count: resultCount },
                     success: function (data) {

@@ -36,6 +36,26 @@ public sealed class HomeController(ILogger<HomeController> logger) : Controller
         logger.LogInformation("Search end");
         return Content(GetSearchResultString(articles));
     }
+    
+    public IActionResult SearchTfIdf(string searchPhrase, int count = 5)
+    {
+        logger.LogInformation("Search start");
+        
+        if (string.IsNullOrEmpty(searchPhrase))
+            return Content("No search phrase provided");
+
+        if (count is < 1 or > 100)
+            count = 5;
+        
+        var resp = Model.SearchFilesTfIdf(searchPhrase, count).ToList();
+        if(resp.Count == 0)
+            return Content("No results found");
+        
+        var articles = Database.GetFiles(resp).OrderBy(a => resp.IndexOf(a.Id)).ToList();
+        ViewBag.SearchResult = articles;
+        logger.LogInformation("Search end");
+        return Content(GetSearchResultString(articles));
+    }
 
     private static string GetSearchResultString(IEnumerable<Article> articles)
     {
